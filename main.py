@@ -1,16 +1,16 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+import yaml
+import logging.config
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+logging.config.fileConfig('./configs/logger.config')
+logger = logging.getLogger('zireaelLogger')
 
+logger.debug('pampam')
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+with open('./configs/sqlite.yaml', 'r') as file:
+    prime_service = yaml.safe_load(file)
+print(prime_service)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+for row in prime_service['db']:
+    print(row)
+
