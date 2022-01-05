@@ -174,3 +174,115 @@ def sqlite_delete(table_name, where_block, db_name, conn):
                 cur.close()
         logger.info('end delete from table {} sqlite db. Conn is sent to the function'.format(table_name))
         return 1
+
+
+def sqlite_select(script, db_name, conn):
+    if conn == 'none':
+        logger.info('start select in sqlite db = {}'.format(db_name))
+        cur = None
+        conn = None
+        result = None
+        try:
+            with open(const.sqlite_conf_path, 'r') as file:
+                db_conf = yaml.safe_load(file)
+
+            conn = sqlite3.connect(db_conf['db'][db_name]['conn_string'])
+            cur = conn.cursor()
+
+            logger.debug('start execute select:\n{}'.format(script))
+            cur.execute(script)
+            result = cur.fetchall()
+        except FileNotFoundError as er_message:
+            logger.error('Ups, error during select: {}'.format(er_message))
+            return -1, result
+        except sqlite3.Error as er_message:
+            logger.error('Ups, error during select: {}'.format(er_message))
+            return -1, result
+        except KeyError as er_message:
+            logger.error('Ups, error during select: {}'.format(er_message))
+            return -1, result
+        else:
+            logger.debug('end execute select')
+        finally:
+            if cur:
+                cur.close()
+            if conn:
+                conn.close()
+        logger.info('end select in sqlite db = {}'.format(db_name))
+        return 1, result
+
+    else:
+        logger.info('start select. Conn is sent to the function')
+        cur = None
+        result = None
+        try:
+            cur = conn.cursor()
+
+            logger.debug('start execute select:\n{}'.format(script))
+            cur.execute(script)
+            result = cur.fetchall()
+        except sqlite3.Error as er_message:
+            logger.error('Ups, error during select: {}'.format(er_message))
+            return -1, result
+        else:
+            logger.debug('end execute select')
+        finally:
+            if cur:
+                cur.close()
+        logger.info('end select. Conn is sent to the function')
+        return 1, result
+
+
+def sqlite_execute_with_commit(script, db_name, conn):
+    if conn == 'none':
+        logger.info('start execute script in sqlite db = {}'.format(db_name))
+        cur = None
+        conn = None
+        try:
+            with open(const.sqlite_conf_path, 'r') as file:
+                db_conf = yaml.safe_load(file)
+
+            conn = sqlite3.connect(db_conf['db'][db_name]['conn_string'])
+            cur = conn.cursor()
+
+            logger.debug('start execute script:\n{}'.format(script))
+            cur.execute(script)
+            conn.commit()
+        except FileNotFoundError as er_message:
+            logger.error('Ups, error during execute script: {}'.format(er_message))
+            return -1
+        except sqlite3.Error as er_message:
+            logger.error('Ups, error during execute script: {}'.format(er_message))
+            return -1
+        except KeyError as er_message:
+            logger.error('Ups, error during execute script: {}'.format(er_message))
+            return -1
+        else:
+            logger.debug('end execute script')
+        finally:
+            if cur:
+                cur.close()
+            if conn:
+                conn.close()
+        logger.info('end execute script in sqlite db = {}'.format(db_name))
+        return 1
+
+    else:
+        logger.info('start execute script. Conn is sent to the function')
+        cur = None
+        try:
+            cur = conn.cursor()
+
+            logger.debug('start execute script:\n{}'.format(script))
+            cur.execute(script)
+            conn.commit()
+        except sqlite3.Error as er_message:
+            logger.error('Ups, error during select: {}'.format(er_message))
+            return -1
+        else:
+            logger.debug('end execute script')
+        finally:
+            if cur:
+                cur.close()
+        logger.info('end execute script. Conn is sent to the function')
+        return 1
