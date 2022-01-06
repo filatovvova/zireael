@@ -80,7 +80,12 @@ import requests
 # print("Latitude:%s\nLongitude:%s\nFormatted Address:%s"
 #       % (latitude, longitude, formatted_address))
 #
-result = put_weather_data_in_db()
+
+# script = 'select * from {}'.format(const.sqlite_location_dir)
+# resp, locations = db_select(script=script, db_type='sqlite', db_name=const.sqlite_db_name)
+# if resp == 1:
+#     for location in locations:
+#         print(location[0])
+
+result = put_weather_data_in_db('sqlite', const.sqlite_row_weather_data)
 print(result)
-
-

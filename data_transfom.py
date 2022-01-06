@@ -9,17 +9,6 @@ logging.config.fileConfig('./configs/logger.config')
 logger = logging.getLogger('zireaelLogger')
 
 
-# with open(const.data_transform_path, 'r') as file:
-#     db_conf = yaml.safe_load(file)
-#
-
-# for steps in db_conf['jobs']:
-#     for step in db_conf['jobs'][steps]:
-#         with open(db_conf['jobs'][steps][step]['step_script'], 'r') as file:
-#             script = file.read().format("DATE('now') - " + str(const.depth_of_calculations_in_days), "DATE('now')")
-#         db_execute_with_commit(script=script, db_type='sqlite', db_name=const.sqlite_db_name)
-
-
 def create_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-sd', '--start_date', default=None)
@@ -28,7 +17,7 @@ def create_parser():
     return parser
 
 
-def start_job(job_name, db_type, start_date, end_date):
+def start_job(job_name, start_date, end_date):
     logger.info('start execute job: {}'.format(job_name))
     try:
         with open(const.data_transform_path, 'r') as file:
@@ -43,6 +32,7 @@ def start_job(job_name, db_type, start_date, end_date):
         logger.debug('yaml conf for job is open')
 
     stop_transform_if_error = dt_conf['jobs'][job_name]['end_if_error']
+    db_type = dt_conf['jobs'][job_name]['db_type']
     for step in dt_conf['jobs'][job_name]['steps']:
         logger.info("start job's step: {}".format(dt_conf['jobs'][job_name]['steps'][step]['step_name']))
         error_flag = False
@@ -96,7 +86,7 @@ if __name__ == '__main__':
     logger.debug('result start_date: {}. result end_date: {}'.format(start_date, end_date))
 
     # block with start jobs for data transform
-    resp = start_job('error_in_the_temperature_forecast_for_the_day', 'sqlite', start_date, end_date)
+    resp = start_job('error_in_the_temperature_forecast_for_the_day_sqlite', start_date, end_date)
     print(resp)
 
     logger.info('end data transform')
