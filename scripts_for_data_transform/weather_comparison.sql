@@ -1,6 +1,5 @@
 Replace into weather_comparison (weather_date,
-								 latitude,
-								 longitude,
+								 location_id,
 								 known_temperature_2m_min,
 								 known_temperature_2m_max,
 								 odf_temperature_2m_min,
@@ -11,8 +10,7 @@ Replace into weather_comparison (weather_date,
 								 fdf_temperature_2m_max
 								)
 select  weather_date,
-	    latitude,
-		longitude,
+	    location_id,
 		known_temperature_2m_min,
 		known_temperature_2m_max,
 		odf_temperature_2m_min,
