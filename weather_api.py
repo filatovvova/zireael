@@ -30,14 +30,14 @@ def get_weather_info(weather_conn):
     return data
 
 
-def put_weather_data_in_db(db_type, row_table):
-    logger.info('start put data about weather in db type {}'.format(db_type))
+def put_weather_data_in_db(db_types, row_table):
+    logger.info('start put data about weather in db type {}'.format(db_types))
     success_for_one_location = -1
     script = 'select * from {}'.format(const.sqlite_location_dir)
     resp, locations = db_select(script=script, db_type='sqlite', db_name=const.sqlite_db_name)
     if resp == -1 or locations is None:
         logger.error('failed to get location data')
-        logger.error('end put data about weather in db type {}'.format(db_type))
+        logger.error('end put data about weather in db type {}'.format(db_types))
         return -1
     for location in locations:
         logger.info('start get data for {}'.format(location[1]))
@@ -55,14 +55,25 @@ def put_weather_data_in_db(db_type, row_table):
                             weather_data['daily']['temperature_2m_min'][i],
                             weather_data['daily']['temperature_2m_max'][i], location[0]]
                 data_for_bulk_insert.append(data_row)
-
-            result = db_bulk_insert(table_name=row_table, data_set=data_for_bulk_insert,
-                                    db_type=db_type,
-                                    pattern='(?,?,?,?,?)', db_name=const.sqlite_db_name)
-            if result == -1:
-                logger.error('Failed to insert weather data into the database with type {}'.format(db_type))
-            else:
-                logger.info('end put data about weather in db type {}'.format(db_type))
-                success_for_one_location = 1
-    logger.info('end put data about weather in db type {}'.format(db_type))
+            for db_type in db_types:
+                if db_type == 'sqlite':
+                    values_pattern = '(?,?,?,?,?)'
+                    fields_name_pattern = 'none'
+                if db_type == 'mysql':
+                    values_pattern = '%s, %s, %s, %s, %s'
+                    fields_name_pattern = '	insert_date, weather_date, temperature_2m_min, temperature_2m_max, location_id'
+                result = db_bulk_insert(table_name=row_table,
+                                        data_set=data_for_bulk_insert,
+                                        db_type=db_type,
+                                        values_pattern=values_pattern,
+                                        fields_name_pattern=fields_name_pattern,
+                                        db_name=const.sqlite_db_name)
+                if result == -1:
+                    logger.error('failed to insert weather data for location {} in db type '.format(location[1],
+                                                                                                    db_type))
+                else:
+                    logger.info('end insert data for {} in db type {}'.format(location[1], db_type))
+                    success_for_one_location = 1
+            logger.info('end get data for {}'.format(location[1], db_type))
+    logger.info('end put data about weather in db type {}'.format(db_types))
     return success_for_one_location

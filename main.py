@@ -5,6 +5,7 @@ from configs import const
 import requests
 from weather_api import *
 from datetime import datetime
+import mysql.connector
 
 
 logging.config.fileConfig('./configs/logger.config')
@@ -87,5 +88,6 @@ import requests
 #     for location in locations:
 #         print(location[0])
 
-result = put_weather_data_in_db('sqlite', const.sqlite_row_weather_data)
+result = put_weather_data_in_db(('sqlite', 'mysql'), const.sqlite_row_weather_data)
 print(result)
+

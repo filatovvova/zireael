@@ -92,6 +92,7 @@ CREATE table if not exists dir_location(
 	longitude text,
 	primary key (location_id)
 );
+INSERT into dir_location (location_id, location, latitude, longitude) values (1, 'St. Petersburg', '59.9386', '30.3141');
 INSERT into dir_location (location_id, location, latitude, longitude) values (2, 'Moscow', '55.7558', '37.6176');
 INSERT into dir_location (location_id, location, latitude, longitude) values (3, 'London', '51.5002', '-0.1262');
 commit;
@@ -241,12 +242,18 @@ select  kw.weather_date,
 		fdf.temperature_2m_min fdf_temperature_2m_min,
 		fdf.temperature_2m_max fdf_temperature_2m_max
 from known_weather kw
-	join forecast_for_one_day   	 odf on odf.weather_date = kw.weather_date and
+	left join forecast_for_one_day   odf on odf.weather_date = kw.weather_date and
 									   		odf.location_id = kw.location_id
 	left join forecast_for_three_day tdf on tdf.weather_date = kw.weather_date and
 									   		tdf.location_id = kw.location_id
 	left join forecast_for_five_day  fdf on fdf.weather_date = kw.weather_date and
 									   		fdf.location_id = kw.location_id
+where odf.temperature_2m_min is not null or
+	  odf.temperature_2m_max is not null or
+	  tdf.temperature_2m_min is not null or
+	  tdf.temperature_2m_max is not null or
+	  fdf.temperature_2m_min is not null or
+	  fdf.temperature_2m_max is not null
 ;
 
 create table if not exists weather_comparison(
@@ -262,3 +269,43 @@ create table if not exists weather_comparison(
 	fdf_temperature_2m_max real,
 	PRIMARY KEY (weather_date, location_id)
 )
+
+-- Data mart part
+drop view if exists v_dm_inaccuracy_daily_temperature_forecast;
+create view v_dm_inaccuracy_daily_temperature_forecast as
+select w.weather_date,
+	   dc.name_day_of_week,
+	   dc.name_of_month,
+	   dc.season,
+	   dc.quarter,
+	   dl.location,
+	   dl.latitude,
+	   dl.longitude,
+	   w.odf_temperature_2m_min - w.known_temperature_2m_min 					od_forecast_inaccuracy_t_2m_min,
+	   w.odf_temperature_2m_max - w.known_temperature_2m_max 					od_forecast_inaccuracy_t_2m_max,
+	   ifnull(w.tdf_temperature_2m_min - w.known_temperature_2m_min, 'unknown') td_forecast_inaccuracy_t_2m_min,
+	   ifnull(w.tdf_temperature_2m_max - w.known_temperature_2m_max, 'unknown') td_forecast_inaccuracy_t_2m_max,
+	   ifnull(w.fdf_temperature_2m_min - w.known_temperature_2m_min, 'unknown') fd_forecast_inaccuracy_t_2m_min,
+	   ifnull(w.fdf_temperature_2m_max - w.known_temperature_2m_max, 'unknown') fd_forecast_inaccuracy_t_2m_max
+from weather_comparison w
+	left join dir_calendar dc on dc."day"  = w.weather_date
+	left join dir_location dl on dl.location_id = w.location_id
+;
+
+create table if not exists dm_inaccuracy_daily_temperature_forecast(
+	weather_date date,
+	name_day_of_week text,
+	name_of_month text,
+	season text,
+	quarter integer,
+	location text,
+	latitude text,
+	longitude text,
+	od_forecast_inaccuracy_t_2m_min real,
+	od_forecast_inaccuracy_t_2m_max real,
+	td_forecast_inaccuracy_t_2m_min real,
+	td_forecast_inaccuracy_t_2m_max real,
+	fd_forecast_inaccuracy_t_2m_min real,
+	fd_forecast_inaccuracy_t_2m_max real,
+	PRIMARY KEY (weather_date, location)
+);

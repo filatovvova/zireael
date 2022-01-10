@@ -1,0 +1,20 @@
+jobs:
+  error_in_the_temperature_forecast_for_the_day_sqlite:
+    steps:
+      0:
+        step_name: 'deduplicate row data with daily weather'
+        step_script: './scripts_for_data_transform/row_weather_data_daily_deduplicated.sql'
+      1:
+        step_name: 'forecast range calculation'
+        step_script: './scripts_for_data_transform/daily_weather_with_forecast_range.sql'
+      2:
+        step_name: 'known weather'
+        step_script: './scripts_for_data_transform/known_weather.sql'
+      3:
+        step_name: 'weather comparison'
+        step_script: './scripts_for_data_transform/weather_comparison.sql'
+      4:
+        step_name: 'create data mart dm_inaccuracy_daily_temperature_forecast'
+        step_script: './scripts_for_data_transform/dm_inaccuracy_daily_temperature_forecast.sql'
+    end_if_error: True
+    db_type: 'sqlite'

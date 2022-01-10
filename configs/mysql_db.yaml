@@ -1,0 +1,6 @@
+db:
+  test:
+    user: 'root'
+    host: 'localhost'
+    database: 'weather_bi'
+    raise_on_warnings: True
