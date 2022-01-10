@@ -35,7 +35,7 @@ def sqlite_create_table(table_name, fields, db_name, conn, if_not_exists):
             logger.error('Ups, error during table creation: {}'.format(er_message))
             return -1
         except yaml.parser.ParserError as er_message:
-            logger.error('Ups, error during bulk insert: {}'.format(er_message))
+            logger.error('Ups, error during table creation: {}'.format(er_message))
             return -1
         else:
             logger.debug('end execute table creation')
@@ -152,7 +152,7 @@ def sqlite_delete(table_name, where_block, db_name, conn):
             logger.error('Ups, error during delete: {}'.format(er_message))
             return -1
         except yaml.parser.ParserError as er_message:
-            logger.error('Ups, error during bulk insert: {}'.format(er_message))
+            logger.error('Ups, error during delete: {}'.format(er_message))
             return -1
         else:
             logger.debug('end execute delete')
@@ -211,7 +211,7 @@ def sqlite_select(script, db_name, conn):
             logger.error('Ups, error during select: {}'.format(er_message))
             return -1, result
         except yaml.parser.ParserError as er_message:
-            logger.error('Ups, error during bulk insert: {}'.format(er_message))
+            logger.error('Ups, error during select: {}'.format(er_message))
             return -1
         else:
             logger.debug('end execute select')
@@ -270,7 +270,7 @@ def sqlite_execute_with_commit(script, db_name, conn):
             logger.error('Ups, error during execute script: {}'.format(er_message))
             return -1
         except yaml.parser.ParserError as er_message:
-            logger.error('Ups, error during bulk insert: {}'.format(er_message))
+            logger.error('Ups, error during execute script: {}'.format(er_message))
             return -1
         else:
             logger.debug('end execute script')

@@ -17,7 +17,7 @@ def create_parser():
     return parser
 
 
-def start_job(job_name, start_date, end_date):
+def start_job(job_name, r_start_date, r_end_date):
     logger.info('start execute job: {}'.format(job_name))
     try:
         with open(const.data_transform_path, 'r') as file:
@@ -30,6 +30,17 @@ def start_job(job_name, start_date, end_date):
         return -1
     else:
         logger.debug('yaml conf for job is open')
+
+    if r_start_date:
+        start_date = r_start_date
+    else:
+        start_date = dt_conf['jobs'][job_name]['date_now'] + " - " + str(const.depth_of_calculations_in_days)
+
+    if r_end_date:
+        end_date = r_end_date
+    else:
+        end_date = dt_conf['jobs'][job_name]['date_now']
+    logger.debug('result start_date: {}. result end_date: {}'.format(start_date, end_date))
 
     stop_transform_if_error = dt_conf['jobs'][job_name]['end_if_error']
     db_type = dt_conf['jobs'][job_name]['db_type']
@@ -73,20 +84,10 @@ if __name__ == '__main__':
 
     logger.debug('start_date from command line: {}. end_date from command line: {}'.format(str(namespace.start_date),
                                                                                            str(namespace.end_date)))
-
-    if namespace.start_date:
-        start_date = str(namespace.start_date)
-    else:
-        start_date = "DATE('now', 'localtime') - " + str(const.depth_of_calculations_in_days)
-
-    if namespace.end_date:
-        end_date = str(namespace.end_date)
-    else:
-        end_date = "DATE('now', 'localtime')"
-    logger.debug('result start_date: {}. result end_date: {}'.format(start_date, end_date))
-
     # block with start jobs for data transform
-    resp = start_job('error_in_the_temperature_forecast_for_the_day_sqlite', start_date, end_date)
+    resp = start_job('error_in_the_temperature_forecast_for_the_day_sqlite', namespace.start_date, namespace.end_date)
+    print(resp)
+    resp = start_job('error_in_the_temperature_forecast_for_the_day_mysql', namespace.start_date, namespace.end_date)
     print(resp)
 
     logger.info('end data transform')
