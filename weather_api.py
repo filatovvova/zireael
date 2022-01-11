@@ -1,8 +1,7 @@
 import requests
 import logging.config
 from configs import const
-from datetime import date
-from zireael import *
+from zireael import db_select, db_bulk_insert
 from datetime import datetime
 
 logging.config.fileConfig('./configs/logger.config')

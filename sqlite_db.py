@@ -1,7 +1,7 @@
 import sqlite3
 import logging.config
-import yaml
 from configs import const
+from work_with_files import get_yaml_data
 
 logging.config.fileConfig('./configs/logger.config')
 logger = logging.getLogger('zireaelLogger')
@@ -19,22 +19,16 @@ def sqlite_create_table(table_name, fields, db_name, conn, if_not_exists):
         logger.info('start create table {} in sqlite db = {}'.format(table_name, db_name))
         cur = None
         conn = None
+        db_conf = get_yaml_data(const.sqlite_conf_path)
+        if db_conf == -1:
+            return -1
         try:
-            with open(const.sqlite_conf_path, 'r') as file:
-                db_conf = yaml.safe_load(file)
-
             conn = sqlite3.connect(db_conf['db'][db_name]['conn_string'])
             cur = conn.cursor()
 
             logger.debug('start execute table creation:\n{}'.format(script))
             cur.execute(script)
-        except FileNotFoundError as er_message:
-            logger.error('Ups, error during table creation: {}'.format(er_message))
-            return -1
         except sqlite3.Error as er_message:
-            logger.error('Ups, error during table creation: {}'.format(er_message))
-            return -1
-        except yaml.parser.ParserError as er_message:
             logger.error('Ups, error during table creation: {}'.format(er_message))
             return -1
         else:
@@ -73,26 +67,17 @@ def sqlite_bulk_insert(table_name, data_set, pattern, db_name, conn):
         logger.info('start bulk insert into table {} in sqlite db = {}'.format(table_name, db_name))
         cur = None
         conn = None
+        db_conf = get_yaml_data(const.sqlite_conf_path)
+        if db_conf == -1:
+            return -1
         try:
-            with open(const.sqlite_conf_path, 'r') as file:
-                db_conf = yaml.safe_load(file)
-
             conn = sqlite3.connect(db_conf['db'][db_name]['conn_string'])
             cur = conn.cursor()
 
             logger.debug('start execute bulk insert:\n{}'.format(script))
             cur.executemany(script, data_set)
             conn.commit()
-        except FileNotFoundError as er_message:
-            logger.error('Ups, error during bulk insert: {}'.format(er_message))
-            return -1
         except sqlite3.Error as er_message:
-            logger.error('Ups, error during bulk insert: {}'.format(er_message))
-            return -1
-        except KeyError as er_message:
-            logger.error('Ups, error during bulk insert: {}'.format(er_message))
-            return -1
-        except yaml.parser.ParserError as er_message:
             logger.error('Ups, error during bulk insert: {}'.format(er_message))
             return -1
         else:
@@ -132,26 +117,17 @@ def sqlite_delete(table_name, where_block, db_name, conn):
         logger.info('start delete from table {} in sqlite db = {}'.format(table_name, db_name))
         cur = None
         conn = None
+        db_conf = get_yaml_data(const.sqlite_conf_path)
+        if db_conf == -1:
+            return -1
         try:
-            with open(const.sqlite_conf_path, 'r') as file:
-                db_conf = yaml.safe_load(file)
-
             conn = sqlite3.connect(db_conf['db'][db_name]['conn_string'])
             cur = conn.cursor()
 
             logger.debug('start execute delete:\n{}'.format(script))
             cur.execute(script)
             conn.commit()
-        except FileNotFoundError as er_message:
-            logger.error('Ups, error during delete: {}'.format(er_message))
-            return -1
         except sqlite3.Error as er_message:
-            logger.error('Ups, error during delete: {}'.format(er_message))
-            return -1
-        except KeyError as er_message:
-            logger.error('Ups, error during delete: {}'.format(er_message))
-            return -1
-        except yaml.parser.ParserError as er_message:
             logger.error('Ups, error during delete: {}'.format(er_message))
             return -1
         else:
@@ -191,28 +167,19 @@ def sqlite_select(script, db_name, conn):
         cur = None
         conn = None
         result = None
+        db_conf = get_yaml_data(const.sqlite_conf_path)
+        if db_conf == -1:
+            return -1
         try:
-            with open(const.sqlite_conf_path, 'r') as file:
-                db_conf = yaml.safe_load(file)
-
             conn = sqlite3.connect(db_conf['db'][db_name]['conn_string'])
             cur = conn.cursor()
 
             logger.debug('start execute select:\n{}'.format(script))
             cur.execute(script)
             result = cur.fetchall()
-        except FileNotFoundError as er_message:
-            logger.error('Ups, error during select: {}'.format(er_message))
-            return -1, result
         except sqlite3.Error as er_message:
             logger.error('Ups, error during select: {}'.format(er_message))
             return -1, result
-        except KeyError as er_message:
-            logger.error('Ups, error during select: {}'.format(er_message))
-            return -1, result
-        except yaml.parser.ParserError as er_message:
-            logger.error('Ups, error during select: {}'.format(er_message))
-            return -1
         else:
             logger.debug('end execute select')
         finally:
@@ -250,26 +217,17 @@ def sqlite_execute_with_commit(script, db_name, conn):
         logger.info('start execute script in sqlite db = {}'.format(db_name))
         cur = None
         conn = None
+        db_conf = get_yaml_data(const.sqlite_conf_path)
+        if db_conf == -1:
+            return -1
         try:
-            with open(const.sqlite_conf_path, 'r') as file:
-                db_conf = yaml.safe_load(file)
-
             conn = sqlite3.connect(db_conf['db'][db_name]['conn_string'])
             cur = conn.cursor()
 
             logger.debug('start execute script:\n{}'.format(script))
             cur.execute(script)
             conn.commit()
-        except FileNotFoundError as er_message:
-            logger.error('Ups, error during execute script: {}'.format(er_message))
-            return -1
         except sqlite3.Error as er_message:
-            logger.error('Ups, error during execute script: {}'.format(er_message))
-            return -1
-        except KeyError as er_message:
-            logger.error('Ups, error during execute script: {}'.format(er_message))
-            return -1
-        except yaml.parser.ParserError as er_message:
             logger.error('Ups, error during execute script: {}'.format(er_message))
             return -1
         else:

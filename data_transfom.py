@@ -1,9 +1,9 @@
 import logging.config
 from configs import const
-import yaml
 from zireael import db_execute_with_commit
 import sys
 import argparse
+from work_with_files import get_file_data, get_yaml_data
 
 logging.config.fileConfig('./configs/logger.config')
 logger = logging.getLogger('zireaelLogger')
@@ -19,17 +19,9 @@ def create_parser():
 
 def start_job(job_name, r_start_date, r_end_date):
     logger.info('start execute job: {}'.format(job_name))
-    try:
-        with open(const.data_transform_path, 'r') as file:
-            dt_conf = yaml.safe_load(file)
-    except FileNotFoundError as er_message:
-        logger.error('Ups, error during open yaml: {}'.format(er_message))
+    dt_conf = get_yaml_data(const.data_transform_path)
+    if dt_conf == -1:
         return -1
-    except KeyError as er_message:
-        logger.error('Ups, error during open yaml: {}'.format(er_message))
-        return -1
-    else:
-        logger.debug('yaml conf for job is open')
 
     if r_start_date:
         start_date = r_start_date
@@ -47,23 +39,16 @@ def start_job(job_name, r_start_date, r_end_date):
     for step in dt_conf['jobs'][job_name]['steps']:
         logger.info("start job's step: {}".format(dt_conf['jobs'][job_name]['steps'][step]['step_name']))
         error_flag = False
-        try:
-            with open(dt_conf['jobs'][job_name]['steps'][step]['step_script'], 'r') as file:
-                script = file.read().format(start_date, end_date)
-        except FileNotFoundError as er_message:
-            logger.error('Ups, error during open transform script: {}'.format(er_message))
-            if stop_transform_if_error:
-                return -1
-            else:
-                error_flag = True
-        except KeyError as er_message:
-            logger.error('Ups, error during open transform script: {}'.format(er_message))
-            if stop_transform_if_error:
-                return -1
-            else:
-                error_flag = True
+        script = get_file_data(dt_conf['jobs'][job_name]['steps'][step]['step_script'])
+        if stop_transform_if_error and script == -1:
+            logger.error('transform process was stopped for job: {}'.format(job_name))
+            return -1
+        elif script == -1:
+            logger.error('step of transform was skipped due to the mistake. the data transformation process will '
+                         'continue with the next step')
+            error_flag = True
         else:
-            logger.debug('transform script is open')
+            script = script.format(start_date, end_date)
 
         if error_flag is False:
             resp = db_execute_with_commit(script=script, db_type=db_type, db_name=const.sqlite_db_name)

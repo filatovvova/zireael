@@ -1,8 +1,8 @@
 import mysql.connector
 from mysql.connector import errorcode
 import logging.config
-import yaml
 from configs import const
+from work_with_files import get_yaml_data, get_file_data
 
 logging.config.fileConfig('./configs/logger.config')
 logger = logging.getLogger('zireaelLogger')
@@ -14,14 +14,14 @@ def mysql_bulk_insert(table_name, data_set, fields_name_pattern, values_pattern,
         logger.info('start bulk insert into table {} in mysql db = {}'.format(table_name, db_name))
         cur = None
         conn = None
+        db_conf = get_yaml_data(const.mysql_conf_path)
+        if db_conf == -1:
+            return -1
+        # not a good practice
+        psw = get_file_data(const.mysql_file)
+        if psw == -1:
+            return -1
         try:
-            with open(const.mysql_conf_path, 'r') as file:
-                db_conf = yaml.safe_load(file)
-
-            # not a good practice
-            with open(const.mysql_file, 'r') as file:
-                psw = file.read()
-
             conn = mysql.connector.connect(user=db_conf['db'][db_name]['user'],
                                            password=psw,
                                            host=db_conf['db'][db_name]['host'],
@@ -33,9 +33,6 @@ def mysql_bulk_insert(table_name, data_set, fields_name_pattern, values_pattern,
             logger.debug('start execute bulk insert:\n{}'.format(script))
             cur.executemany(script, data_set)
             conn.commit()
-        except FileNotFoundError as er_message:
-            logger.error('Ups, error during bulk insert: {}'.format(er_message))
-            return -1
         except mysql.connector.Error as err:
             if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
                 logger.error("Ups, something is wrong with your user name or password: {}".format(err.msg))
@@ -46,12 +43,6 @@ def mysql_bulk_insert(table_name, data_set, fields_name_pattern, values_pattern,
             else:
                 logger.error('Ups, error during execute script: {}. err number = {}'.format(err.msg, err.errno))
                 return -1
-        except KeyError as er_message:
-            logger.error('Ups, error during bulk insert: {}'.format(er_message))
-            return -1
-        except yaml.parser.ParserError as er_message:
-            logger.error('Ups, error during bulk insert: {}'.format(er_message))
-            return -1
         else:
             logger.debug('end execute bulk insert')
         finally:
@@ -88,14 +79,14 @@ def mysql_execute_with_commit(script, db_name, conn):
         logger.info('start execute script in mysql db = {}'.format(db_name))
         cur = None
         conn = None
+        db_conf = get_yaml_data(const.mysql_conf_path)
+        if db_conf == -1:
+            return -1
+        # not a good practice
+        psw = get_file_data(const.mysql_file)
+        if psw == -1:
+            return -1
         try:
-            with open(const.mysql_conf_path, 'r') as file:
-                db_conf = yaml.safe_load(file)
-
-            # not a good practice
-            with open(const.mysql_file, 'r') as file:
-                psw = file.read()
-
             conn = mysql.connector.connect(user=db_conf['db'][db_name]['user'],
                                            password=psw,
                                            host=db_conf['db'][db_name]['host'],
@@ -107,9 +98,6 @@ def mysql_execute_with_commit(script, db_name, conn):
             logger.debug('start execute script:\n{}'.format(script))
             cur.execute(script)
             conn.commit()
-        except FileNotFoundError as er_message:
-            logger.error('Ups, error during execute script: {}'.format(er_message))
-            return -1
         except mysql.connector.Error as err:
             if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
                 logger.error("Ups, something is wrong with your user name or password: {}".format(err.msg))
@@ -120,12 +108,6 @@ def mysql_execute_with_commit(script, db_name, conn):
             else:
                 logger.error('Ups, error during execute script: {}. err number = {}'.format(err.msg, err.errno))
                 return -1
-        except KeyError as er_message:
-            logger.error('Ups, error during execute script: {}'.format(er_message))
-            return -1
-        except yaml.parser.ParserError as er_message:
-            logger.error('Ups, error during execute script: {}'.format(er_message))
-            return -1
         else:
             logger.debug('end execute script')
         finally:
